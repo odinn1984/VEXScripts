@@ -1,0 +1,50 @@
+/**
+ * Add surrounding points in a radious to the group and spread
+ * across all points in the geometry.
+ *
+ * At least one point has to be in the 'Infected Group' to start with
+ *
+ * Inspired by: https://www.youtube.com/watch?v=euG933INMTk
+ */
+
+int firstPointNumber = chi('first_point_number');
+string pointGroupName = chs('infected_group_name');
+float infectionRadius = chf('infection_radius');
+float infectionRadiusVariance = chf('infection_radius_variance');
+int maxPointsToInfect = chi('max_points_to_infect');
+float maxPointsToInfectVariance = chf('max_points_to_infect_variance');
+
+int effectiveMaxPointsToInfect = maxPointsToInfectVariance > 0.0 ?
+    ceil(
+        fit(
+            rand(@ptnum),
+            0.0,
+            1.0,
+            maxPointsToInfect * maxPointsToInfectVariance,
+            maxPointsToInfect * (1 + maxPointsToInfectVariance)
+        )
+    ) : maxPointsToInfect;
+
+float effectiveRadius = infectionRadiusVariance > 0.0 ? 
+    fit(
+        rand(@ptnum),
+        0.0,
+        1.0,
+        infectionRadius * infectionRadiusVariance,
+        infectionRadius * (1 + infectionRadiusVariance)
+    ) : infectionRadius;
+
+// Set initial point in expected group to spread from
+if (@ptnum == firstPointNumber) {
+    setpointgroup(0, pointGroupName, firstPointNumber, 1, 'set');
+}
+
+if (inpointgroup(0, pointGroupName, @ptnum)) {
+    int pointsToInfect[] = nearpoints(0, @P, effectiveRadius, effectiveMaxPointsToInfect);
+
+    foreach (int pointToInfect; pointsToInfect) {
+        setpointgroup(0, pointGroupName, pointToInfect, 1, 'set');
+    }
+
+    @infecting = 1;
+}
